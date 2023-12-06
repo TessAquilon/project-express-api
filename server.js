@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import videoGameData from "./data/video-games.json";
+import data from "./data/csvjson.json";
 
 // Defines the port the app will run on. Defaults to 8080, but can be overridden
 // when starting the server. Example command to overwrite PORT env variable value:
@@ -14,65 +14,163 @@ app.use(express.json());
 
 // Start defining your routes here
 app.get("/", (req, res) => {
-  res.send("Home page");
+  res.json({
+    message: "Welcome! Trans Rights Indicator Project (TRIP) API provides insight into the legal situations transgender people faced in 173 countries from 2000 to 2021. The dataset currently includes 14 indicators that capture the presence or absence of laws related to criminalization, legal gender recognition, and anti-discrimination protections. Have a look around.",
+    routes: [
+      {
+        "/": "Index route. Information about all available routes.",
+        "/all": "Returns all data from the JSON file.",
+        "/country/:country": "Returns all data from a specific country. Example: http://localhost:8080/country/Argentina",
+        "/year/:year": "Returns all data from a specific year. Example: http://localhost:8080/year/2021",
+        "/country/:country/year/:year": "Returns all data from a specific country and year. Example: http://localhost:8080/country/Argentina/year/2021",
+        "/regime_type/:regime_type": "Returns all data based on regime type. Example: http://localhost:8080/regime_type/electoraldemocracy",
+        "/region/:region": "Returns all data based on region. Example: http://localhost:8080/region/latinamerica"
+
+      }
+    ]
+  });
 });
 
-// This function covers the most common 4xx error codes
-
-const messages = {
-  400: "400 Bad Request: The request by the client was not processed, as the server could not understand what the client is asking for.",
-  401: "401 Unauthorized: The client is not allowed to access resources, and should re-request with the required credentials.",
-  403: "403 Forbidden: The request is valid and the client is authenticated, but the client is not allowed access the page or resource for any reason. E.g sometimes the authorized client is not allowed to access the directory on the server.",
-  404: "404 Not Found: The requested resource is not available now.",
-  410: "410 Gone: The requested resource is no longer available which has been intentionally moved."
-};
-
-app.all("*", (req, res) => {
-  const statusCode = parseInt(res.statusCode);
-  // The statusCode property is a numeric HTTP status code that indicates the result of the HTTP request.
-  // The parseInt() function is a built-in JavaScript function that parses a string and returns an integer.
-  // In this case, it is used to ensure that the statusCode property is an integer, since it is possible that it could be a string.
-  const message = messages[statusCode] || "Unknown Error";
-  // By converting the statusCode property to an integer, we can use it as a key to retrieve the corresponding message from the messages object.
-  res.send(message);
-});
 
 // This function gets all the video game data received from the JSON 
-app.get("/videogames", (req, res) => {
-  const data = videoGameData
+app.get("/all", (req, res) => {
+  const allData = data;
   if (data) {
     res.status(200).json({
       success: true,
       message: "OK",
       body: {
-        videoGameData: data
+        allData
       }
     })
   } else {
     res.status(500).json({
       success: false,
       message: "Something went wrong",
-      body: {}
     })
   }
   
 })
 
-// Rating endpoint
-app.get("/videogames/ratedAs/:rating", (req, res) => {
-  const rating = req.params.rating
-  console.log({ rating })
-  const filteredByRating = videoGameData.filter((item) => item.Rating === +rating)
-  res.json(filteredByRating)
-})
+// Endpoint to get all the data from a specific country
+// Example: http://localhost:8080/country/Argentina
+// country_name: "Argentina"
+app.get("/country/:country", (req, res) => {
+  const country = req.params.country;
+  const countryData = data.filter((item) => item.country_name === country);
+  if (countryData.length > 0) {
+    res.status(200).json({
+      success: true,
+      message: "OK",
+      body: {
+        countryData
+      }
+    })
+  } else {
+    res.status(404).json({
+      success: false,
+      message: "Country not found",
+    })
+  }
+});
 
-// Video game endpoint
-app.get("/videogames/:videogameId", (req, res) => {
-  const id = req.params.videogameId
-  console.log({ id })
-  const filteredById = videoGameData.filter((item) => item.Id === +id)
-  res.json(filteredById)
-})
+// Endpoint to get all the data from a specific year
+// Example: http://localhost:8080/year/2021
+// year: "2021"
+app.get("/year/:year", (req, res) => {
+  const year = parseInt(req.params.year);
+  const yearData = data.filter((item) => item.year === year);
+  if (yearData.length > 0) {
+    res.status(200).json({
+      success: true,
+      message: "OK",
+      body: {
+        yearData
+      }
+    })
+  } else {
+    res.status(404).json({
+      success: false,
+      message: "Year not found",
+    })
+  }
+});
+
+// Endpoint to get all the data from a specific country and year
+// Example: http://localhost:8080/country/Argentina/year/2021
+// country_name: "Argentina"
+// year: "2021"
+app.get("/country/:country/year/:year", (req, res) => {
+  const country = req.params.country;
+  const year = parseInt(req.params.year);
+  const countryYearData = data.filter((item) => item.country_name === country && item.year === year);
+  if (countryYearData.length > 0) {
+    res.status(200).json({
+      success: true,
+      message: "OK",
+      body: {
+        countryYearData
+      }
+    })
+  } else {
+    res.status(404).json({
+      success: false,
+      message: "Country or year not found",
+    })
+  }
+});
+
+// Endpoint to get all the data based on regime type
+// Example: http://localhost:8080/regime_type/electoraldemocracy
+// regime_type: "Electoral democracy"
+app.get("/regime_type/:regime_type", (req, res) => {
+  const requestedRegimeType = req.params.regime_type.toLowerCase().replace(/\s/g, ''); // Convert to lowercase and remove spaces
+  const regimeTypeData = data.filter((item) => {
+    // Remove spaces and convert the regime type in each item to lowercase for comparison
+    const itemRegimeType = item.v2x_regime.toLowerCase().replace(/\s/g, '');
+    return itemRegimeType === requestedRegimeType;
+  });
+  if (regimeTypeData.length > 0) {
+    res.status(200).json({
+      success: true,
+      message: "OK",
+      body: {
+        regimeTypeData
+      }
+    })
+  } else {
+    res.status(404).json({
+      success: false,
+      message: "Regime type not found",
+    })
+  }
+});
+
+// Endpoint to get all the data based on region
+// Example: http://localhost:8080/region/latinamerica
+// e_regionpol: "Latin America"
+app.get("/region/:region", (req, res) => {
+  const requestedRegion = req.params.region.toLowerCase().replace(/\s/g, ''); // Convert to lowercase and remove spaces
+  const regionData = data.filter((item) => {
+    // Remove spaces and convert the region in each item to lowercase for comparison
+    const itemRegion = item.e_regionpol.toLowerCase().replace(/\s/g, '');
+    return itemRegion === requestedRegion;
+  });
+  if (regionData.length > 0) {
+    res.status(200).json({
+      success: true,
+      message: "OK",
+      body: {
+        regionData
+      }
+    })
+  } else {
+    res.status(404).json({
+      success: false,
+      message: "Region not found",
+    })
+  }
+});
 
 // Start the server
 app.listen(port, () => {
