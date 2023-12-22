@@ -56,8 +56,8 @@ app.get("/all", (req, res) => {
 // Example: http://localhost:8080/country/Argentina
 // country_name: "Argentina"
 app.get("/country/:country", (req, res) => {
-  const country = req.params.country;
-  const countryData = data.filter((item) => item.country_name === country);
+  const requestedCountry = req.params.country.toLowerCase();
+  const countryData = data.filter((item) => item.country_name.toLowerCase() === requestedCountry);
   if (countryData.length > 0) {
     res.status(200).json({
       success: true,
