@@ -4,7 +4,11 @@ Trans Rights Indicator Project (TRIP) API provides insight into the legal situat
 
 ## The problem
 
-The problem was to create an Express API, using a provided dataset or a dataset of our choice. I found my dataset on Kaggle https://www.kaggle.com/datasets/konradb/trans-rights-indicator-project/data and converted it to JSON using this nifty tool https://csvjson.com/.
+The problem was to create an Express API, using a provided dataset or a dataset of our choice. I found the TRIP dataset on Kaggle https://www.kaggle.com/datasets/konradb/trans-rights-indicator-project/data and converted it to JSON using https://csvjson.com/.
+
+## Features I would like to add
+
+I would like to turn this data into something visual and interactive!
 
 ## View it live
 
